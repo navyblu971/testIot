@@ -14,12 +14,17 @@
 #include <WiFiNINA.h>
 
 #include <PubSubClient.h>
+#include <Servo.h>
 
 #include "arduino_secrets.h" 
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
 char ssid[] = SECRET_SSID;        // your network SSID (name)
 char pass[] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
 int status = WL_IDLE_STATUS;     // the Wifi radio's status
+
+//servo position 
+int pos = 0; 
+Servo myservo; 
 
 
 void callback(char* topic, byte* payload, unsigned int length) {
@@ -30,6 +35,12 @@ void callback(char* topic, byte* payload, unsigned int length) {
     Serial.print((char)payload[i]);
   }
   Serial.println();
+
+  for (pos = 0; pos <= 50; pos += 1) { // goes from 0 degrees to 180 degrees
+    // in steps of 1 degree
+    myservo.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(15);                       // waits 15ms for the servo to reach the position
+  }
 }
 
 WiFiClient ethClient;
@@ -81,6 +92,10 @@ void setup() {
   printCurrentNet();
   printWifiData();
 
+   myservo.attach(10);
+
+  client.subscribe("test");
+
 }
 
 
@@ -120,7 +135,7 @@ void reconnect() {
       // Once connected, publish an announcement...
       client.publish("outTopic","hello world");
       // ... and resubscribe
-      client.subscribe("inTopic");
+      client.subscribe("test");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -168,7 +183,7 @@ void printCurrentNet() {
 void loop() {
   // check the network connection once every 10 seconds:
   delay(10000);
-  printCurrentNet();
+  //printCurrentNet();
 
   if (!client.connected()) {
     reconnect();
@@ -176,6 +191,8 @@ void loop() {
 
   client.publish("curial sensor", "Hello from curial");
   client.loop();
+
+  
 
   
 }
